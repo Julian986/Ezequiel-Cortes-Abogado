@@ -1132,7 +1132,7 @@ export default function Landing() {
                 </div>
                 <div>
                   <p className="font-medium text-white mb-1">Teléfono</p>
-                  <a href={`tel:${SITE.phone}`} className="text-slate-300 hover:text-[var(--gold)] transition-colors text-sm">
+                  <a href={`tel:${SITE.phone}`} className="blanco text-white hover:text-[var(--gold)] transition-colors text-sm">
                     {SITE.phone}
                   </a>
                 </div>
