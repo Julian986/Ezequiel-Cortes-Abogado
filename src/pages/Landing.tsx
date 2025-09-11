@@ -282,8 +282,8 @@ export default function Landing() {
   
       {/* HEADER ORIGINAL */}
       <header
-        className={`fixed top-0 left-0 z-50 transition-all duration-300 ${
-          scrolled ? 'bg-white shadow-lg' : 'backdrop-blur-sm'
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-black/20 backdrop-blur-sm'
         }`}
         style={{
           top: 'env(safe-area-inset-top, 0px)',
@@ -292,81 +292,80 @@ export default function Landing() {
           transform: 'translateZ(0)',
           width: '100vw',
           maxWidth: '100vw',
-          boxSizing: 'border-box',
-          background: scrolled 
-            ? undefined 
-            : 'linear-gradient(to bottom, oklch(0.25 0 0 / 0.7), oklch(0.19 0 0 / 0.64))'
+          boxSizing: 'border-box'
         }}
       >
-        <nav className="max-w-7xl mx-auto px-8 flex items-center justify-between py-4">
+        <nav className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between py-4">
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className={`size-12 rounded border-2 flex items-center justify-center ${scrolled ? 'bg-white border-neutral-300' : 'bg-white/10 border-white/20'}`}>
-              <div className={`text-2xl font-serif font-bold ${scrolled ? 'text-neutral-700' : 'text-white'}`}>
-                {SITE.initials}
+          <a href="#inicio" className="flex items-center gap-3">
+            <div className="flex flex-col items-center">
+              <div className={`size-12 rounded border-2 flex items-center justify-center ${
+                scrolled 
+                  ? 'bg-white border-neutral-300' 
+                  : 'bg-white/90 backdrop-blur-sm border-white/50'
+              }`}>
+                <div className={`text-2xl font-serif font-bold ${
+                  scrolled ? 'text-neutral-700' : 'text-neutral-800'
+                }`}>
+                  {SITE.initials}
+                </div>
               </div>
             </div>
-            <span className={`font-bold text-2xl tracking-tight ${scrolled ? 'text-neutral-700' : 'text-white'}`}>{SITE.fullName}</span>
-          </div>
+            <div className="leading-tight">
+              <div className={`font-light text-lg ${scrolled ? 'text-neutral-800' : 'text-white drop-shadow-lg'}`}>
+                {SITE.fullName}
+              </div>
+            </div>
+          </a>
 
-          {/* Menú desktop original */}
-          <ul className="hidden lg:flex items-center gap-8">
-            <li>
-              <a
-                href="#inicio"
-                className={`font-medium transition-colors duration-200 ${
-                  scrolled ? 'text-neutral-700 hover:text-[var(--gold)]' : 'hover:text-white'
-                }`}
-                style={scrolled ? {} : { color: 'hsl(0deg 0% 90% / 90%)' }}
-              >
-                Inicio
-              </a>
-            </li>
-            <li>
-              <a
-                href="#servicios"
-                className={`font-medium transition-colors duration-200 ${
-                  scrolled ? 'text-neutral-700 hover:text-[var(--gold)]' : 'hover:text-white'
-                }`}
-                style={scrolled ? {} : { color: 'hsl(0deg 0% 90% / 90%)' }}
-              >
-                Servicios
-              </a>
-            </li>
-            <li>
-              <a
-                href="#abogado"
-                className={`font-medium transition-colors duration-200 ${
-                  scrolled ? 'text-neutral-700 hover:text-[var(--gold)]' : 'hover:text-white'
-                }`}
-                style={scrolled ? {} : { color: 'hsl(0deg 0% 90% / 90%)' }}
-              >
-                Abogado
-              </a>
-            </li>
-            <li>
-              <a
-                href="#testimonios"
-                className={`font-medium transition-colors duration-200 ${
-                  scrolled ? 'text-neutral-700 hover:text-[var(--gold)]' : 'hover:text-white'
-                }`}
-                style={scrolled ? {} : { color: 'hsl(0deg 0% 90% / 90%)' }}
-              >
-                Testimonios
-              </a>
-            </li>
-            <li>
-              <a
-                href="#contacto"
-                className={`font-medium transition-colors duration-200 ${
-                  scrolled ? 'text-neutral-700 hover:text-[var(--gold)]' : 'hover:text-white'
-                }`}
-                style={scrolled ? {} : { color: 'hsl(0deg 0% 90% / 90%)' }}
-              >
-                Contacto
-              </a>
-            </li>
-          </ul>
+          {/* Navigation */}
+          <nav className="hidden md:flex items-center gap-8">
+            <a 
+              href="#inicio" 
+              className={`text-base font-light tracking-wide hover:text-[var(--gold)] transition-colors ${
+                scrolled ? 'text-neutral-800' : 'text-white drop-shadow-md'
+              }`}
+              style={{ color: scrolled ? '#1f2937' : 'white' }}
+            >
+              Inicio
+            </a>
+            <a 
+              href="#servicios" 
+              className={`text-base font-light tracking-wide hover:text-[var(--gold)] transition-colors ${
+                scrolled ? 'text-neutral-800' : 'text-white drop-shadow-md'
+              }`}
+              style={{ color: scrolled ? '#1f2937' : 'white' }}
+            >
+              Servicios
+            </a>
+            <a 
+              href="#abogado" 
+              className={`text-base font-light tracking-wide hover:text-[var(--gold)] transition-colors ${
+                scrolled ? 'text-neutral-800' : 'text-white drop-shadow-md'
+              }`}
+              style={{ color: scrolled ? '#1f2937' : 'white' }}
+            >
+              Abogado
+            </a>
+            <a 
+              href="#testimonios" 
+              className={`text-base font-light tracking-wide hover:text-[var(--gold)] transition-colors ${
+                scrolled ? 'text-neutral-800' : 'text-white drop-shadow-md'
+              }`}
+              style={{ color: scrolled ? '#1f2937' : 'white' }}
+            >
+              Testimonios
+            </a>
+            <a 
+              href="#contacto" 
+              className={`text-base font-light tracking-wide hover:text-[var(--gold)] transition-colors ${
+                scrolled ? 'text-neutral-800' : 'text-white drop-shadow-md'
+              }`}
+              style={{ color: scrolled ? '#1f2937' : 'white' }}
+            >
+              Contacto
+            </a>
+          </nav>
 
           {/* Botón hamburguesa móvil */}
           <button 
