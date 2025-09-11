@@ -486,7 +486,7 @@ export default function Landing() {
           <div
             className="h-full w-full bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: "url('/fondo_hero.png')",
+              backgroundImage: "url('https://res.cloudinary.com/dzoupwn0e/image/upload/v1757602564/fondo_hero_sttxrm.webp')",
               backgroundSize: "cover",
               backgroundPosition: "center",
               backgroundRepeat: "no-repeat",
