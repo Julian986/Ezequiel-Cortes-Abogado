@@ -4,7 +4,6 @@ import {
   Gavel,
   Scale,
   Users,
-  Shield,
   Clock,
   Play,
   MapPin,
@@ -12,9 +11,8 @@ import {
   Phone,
   MessageCircle,
   ChevronDown,
-  Youtube
 } from "lucide-react";
-import fondoHero from "../assets/fondo_hero.png";
+import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 
 /**
  * Landing page para el abogado Ezequiel Cortés – Bahía Blanca
@@ -51,23 +49,44 @@ const COLORS = {
   navy: "#0C1320",
 };
 
-function useScrolled(threshold = 100) {
+function useScrolled(threshold = 50) {
   const [scrolled, setScrolled] = useState(false);
+  
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > threshold);
+    const onScroll = () => {
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      setScrolled(scrollY > threshold);
+    };
+    
+    // Verificar el estado inicial inmediatamente
     onScroll();
+    
+    // Múltiples verificaciones para asegurar que funcione en móvil
+    const timeouts = [
+      setTimeout(onScroll, 50),
+      setTimeout(onScroll, 100),
+      setTimeout(onScroll, 200)
+    ];
+    
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll, { passive: true });
+    
+    return () => {
+      timeouts.forEach(clearTimeout);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, [threshold]);
+  
   return scrolled;
 }
 
-function SectionHeading({ title, subtitle }: { title: string; subtitle?: string }) {
+function SectionHeading({ title, subtitle, cityText }: { title: string; subtitle?: string; cityText?: string }) {
   return (
     <div className="max-w-3xl mx-auto text-center mb-10">
       <div className="inline-flex items-center gap-3 mb-4">
         <span className="h-[2px] w-10 bg-[var(--gold)]" />
-        <span className="uppercase tracking-widest text-xs text-neutral-500">{SITE.city}</span>
+        <span className="uppercase tracking-widest text-xs text-neutral-500">{cityText || SITE.city}</span>
         <span className="h-[2px] w-10 bg-[var(--gold)]" />
       </div>
       <h2 className="text-3xl md:text-4xl font-semibold text-neutral-900 mb-3">{title}</h2>
@@ -75,14 +94,6 @@ function SectionHeading({ title, subtitle }: { title: string; subtitle?: string 
         <p className="text-neutral-600 leading-relaxed">{subtitle}</p>
       ) : null}
     </div>
-  );
-}
-
-function Badge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur px-3 py-1 text-sm shadow-sm border border-neutral-200">
-      {children}
-    </span>
   );
 }
 
@@ -110,7 +121,7 @@ function ServiceCard({
         <h3 className="text-xl font-semibold text-black">{title}</h3>
       </div>
       <p className="text-neutral-600 leading-relaxed mb-4">{desc}</p>
-      <button className="inline-flex items-center gap-2 text-white font-medium">
+      <button className="inline-flex items-center gap-2 font-medium text-white" style={{ backgroundColor: 'hsl(225 30% 18%)' }}>
         Más información <ChevronDown className="size-4" />
       </button>
     </motion.div>
@@ -128,13 +139,79 @@ function FAQItem({ q, a }: { q: string; a: string }) {
         <span className="font-medium text-neutral-900">{q}</span>
         <ChevronDown className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
-      {open && <div className="px-5 pb-5 pt-0 text-neutral-600 leading-relaxed">{a}</div>}
+      {open && <div className="px-5 pb-5 pt-3 text-neutral-600 leading-relaxed">{a}</div>}
     </div>
   );
 }
 
 export default function Landing() {
   const scrolled = useScrolled();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Debug del estado del menú móvil
+  useEffect(() => {
+    console.log('Estado del menú móvil cambió:', mobileMenuOpen);
+  }, [mobileMenuOpen]);
+
+  // Función para hacer scroll suave a las secciones
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    setMobileMenuOpen(false); // Cerrar menú móvil al hacer click
+  };
+
+  // Cerrar menú móvil al hacer clic fuera y controlar scroll
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (mobileMenuOpen && !target.closest('.mobile-menu') && !target.closest('.hamburger-button')) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    // Controlar scroll del body
+    if (mobileMenuOpen) {
+      document.body.classList.add('menu-open');
+    } else {
+      document.body.classList.remove('menu-open');
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.body.classList.remove('menu-open');
+    };
+  }, [mobileMenuOpen]);
+
+  // Arreglar viewport móvil
+  useEffect(() => {
+    const handleViewportFix = () => {
+      // Prevenir zoom en iOS
+      const viewport = document.querySelector('meta[name=viewport]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+      }
+      
+      // Forzar recálculo del viewport
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+      
+      // Prevenir scroll horizontal
+      document.body.style.overflowX = 'hidden';
+      document.documentElement.style.overflowX = 'hidden';
+    };
+
+    handleViewportFix();
+    window.addEventListener('resize', handleViewportFix);
+    window.addEventListener('orientationchange', handleViewportFix);
+
+    return () => {
+      window.removeEventListener('resize', handleViewportFix);
+      window.removeEventListener('orientationchange', handleViewportFix);
+    };
+  }, []);
 
   const mapsEmbed = useMemo(
     () => `https://maps.google.com/maps?q=${SITE.lat},${SITE.lng}&z=15&output=embed`,
@@ -190,7 +267,7 @@ export default function Landing() {
       className="min-h-dvh bg-neutral-50 text-neutral-900"
     >
       {/* CONTACT BAR - Barra superior como en Estudio Riccio */}
-      <div className="bg-neutral-800 text-neutral-300 text-sm py-2">
+  {/*     <div className="bg-neutral-800 text-neutral-300 text-sm py-2">
         <div className="max-w-7xl mx-auto px-4 md:px-8 flex justify-end items-center gap-6">
           <a href={`mailto:${SITE.email}`} className="flex items-center gap-2 hover:text-white">
             <Mail className="size-4" />
@@ -201,91 +278,185 @@ export default function Landing() {
             {SITE.phone}
           </a>
         </div>
-      </div>
+      </div> */}
   
-      {/* NAVBAR */}
+      {/* HEADER ORIGINAL */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "bg-white/95 backdrop-blur-md shadow-lg"
-            : "bg-black/20 backdrop-blur-sm"
+        className={`fixed top-0 left-0 z-50 transition-all duration-300 ${
+          scrolled ? 'bg-white shadow-lg' : 'backdrop-blur-sm'
         }`}
+        style={{
+          top: 'env(safe-area-inset-top, 0px)',
+          minHeight: '80px',
+          WebkitTransform: 'translateZ(0)',
+          transform: 'translateZ(0)',
+          width: '100vw',
+          maxWidth: '100vw',
+          boxSizing: 'border-box',
+          background: scrolled 
+            ? undefined 
+            : 'linear-gradient(to bottom, oklch(0.25 0 0 / 0.7), oklch(0.19 0 0 / 0.64))'
+        }}
       >
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex items-center justify-between py-4">
-            {/* Logo */}
-            <a href="#inicio" className="flex items-center gap-3">
-              <div className="flex flex-col items-center">
-                <div className={`size-12 rounded border-2 flex items-center justify-center ${
-                  scrolled 
-                    ? 'bg-white border-neutral-300' 
-                    : 'bg-white/90 backdrop-blur-sm border-white/50'
-                }`}>
-                  <div className={`text-2xl font-serif font-bold ${
-                    scrolled ? 'text-neutral-700' : 'text-neutral-800'
-                  }`}>
-                    {SITE.initials}
-                  </div>
-                </div>
+        <nav className="max-w-7xl mx-auto px-8 flex items-center justify-between py-4">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className={`size-12 rounded border-2 flex items-center justify-center ${scrolled ? 'bg-white border-neutral-300' : 'bg-white/10 border-white/20'}`}>
+              <div className={`text-2xl font-serif font-bold ${scrolled ? 'text-neutral-700' : 'text-white'}`}>
+                {SITE.initials}
               </div>
-              <div className="leading-tight">
-                <div className={`font-light text-lg ${scrolled ? 'text-neutral-800' : 'text-white drop-shadow-lg'}`}>
-                  {SITE.fullName}
-                </div>
-              </div>
-            </a>
-  
-            {/* Navigation */}
-            <nav className="hidden md:flex items-center gap-8">
-              <a 
-                href="#inicio" 
-                className={`text-base font-light tracking-wide hover:text-[var(--gold)] transition-colors ${
-                  scrolled ? 'text-neutral-800' : 'text-white drop-shadow-md'
+            </div>
+            <span className={`font-bold text-2xl tracking-tight ${scrolled ? 'text-neutral-700' : 'text-white'}`}>{SITE.fullName}</span>
+          </div>
+
+          {/* Menú desktop original */}
+          <ul className="hidden lg:flex items-center gap-8">
+            <li>
+              <a
+                href="#inicio"
+                className={`font-medium transition-colors duration-200 ${
+                  scrolled ? 'text-neutral-700 hover:text-[var(--gold)]' : 'hover:text-white'
                 }`}
-                style={{ color: scrolled ? '#1f2937' : 'white' }}
+                style={scrolled ? {} : { color: 'hsl(0deg 0% 90% / 90%)' }}
               >
                 Inicio
               </a>
-              <a 
-                href="#servicios" 
-                className={`text-base font-light tracking-wide hover:text-[var(--gold)] transition-colors ${
-                  scrolled ? 'text-neutral-800' : 'text-white drop-shadow-md'
+            </li>
+            <li>
+              <a
+                href="#servicios"
+                className={`font-medium transition-colors duration-200 ${
+                  scrolled ? 'text-neutral-700 hover:text-[var(--gold)]' : 'hover:text-white'
                 }`}
-                style={{ color: scrolled ? '#1f2937' : 'white' }}
+                style={scrolled ? {} : { color: 'hsl(0deg 0% 90% / 90%)' }}
               >
                 Servicios
               </a>
-              <a 
-                href="#abogado" 
-                className={`text-base font-light tracking-wide hover:text-[var(--gold)] transition-colors ${
-                  scrolled ? 'text-neutral-800' : 'text-white drop-shadow-md'
+            </li>
+            <li>
+              <a
+                href="#abogado"
+                className={`font-medium transition-colors duration-200 ${
+                  scrolled ? 'text-neutral-700 hover:text-[var(--gold)]' : 'hover:text-white'
                 }`}
-                style={{ color: scrolled ? '#1f2937' : 'white' }}
+                style={scrolled ? {} : { color: 'hsl(0deg 0% 90% / 90%)' }}
               >
                 Abogado
               </a>
-              <a 
-                href="#testimonios" 
-                className={`text-base font-light tracking-wide hover:text-[var(--gold)] transition-colors ${
-                  scrolled ? 'text-neutral-800' : 'text-white drop-shadow-md'
+            </li>
+            <li>
+              <a
+                href="#testimonios"
+                className={`font-medium transition-colors duration-200 ${
+                  scrolled ? 'text-neutral-700 hover:text-[var(--gold)]' : 'hover:text-white'
                 }`}
-                style={{ color: scrolled ? '#1f2937' : 'white' }}
+                style={scrolled ? {} : { color: 'hsl(0deg 0% 90% / 90%)' }}
               >
-                Noticias
+                Testimonios
               </a>
-              <a 
-                href="#contacto" 
-                className={`text-base font-light tracking-wide hover:text-[var(--gold)] transition-colors ${
-                  scrolled ? 'text-neutral-800' : 'text-white drop-shadow-md'
+            </li>
+            <li>
+              <a
+                href="#contacto"
+                className={`font-medium transition-colors duration-200 ${
+                  scrolled ? 'text-neutral-700 hover:text-[var(--gold)]' : 'hover:text-white'
                 }`}
-                style={{ color: scrolled ? '#1f2937' : 'white' }}
+                style={scrolled ? {} : { color: 'hsl(0deg 0% 90% / 90%)' }}
               >
                 Contacto
               </a>
-            </nav>
+            </li>
+          </ul>
+
+          {/* Botón hamburguesa móvil */}
+          <button 
+            onClick={() => {
+              console.log('Botón hamburguesa clickeado, estado actual:', mobileMenuOpen);
+              setMobileMenuOpen(!mobileMenuOpen);
+              console.log('Nuevo estado:', !mobileMenuOpen);
+            }}
+            className="lg:hidden p-3 rounded-lg hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:ring-opacity-50 bg-blue-100"
+            style={{ minWidth: '48px', minHeight: '48px' }}
+          >
+            <div className="w-6 h-6 flex flex-col justify-center items-center space-y-1">
+              <span className={`block w-5 h-0.5 bg-gray-700 transition-all duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
+              <span className={`block w-5 h-0.5 bg-gray-700 transition-all duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`}></span>
+              <span className={`block w-5 h-0.5 bg-gray-700 transition-all duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+            </div>
+          </button>
+        </nav>
+      </header>
+      
+      {/* Menú móvil */}
+      <div className={`mobile-menu fixed top-0 left-0 w-full h-full z-40 transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:hidden`} style={{ backgroundColor: '#f8f9fa' }}>
+        {/* Botón cerrar flotante */}
+        <button
+          onClick={() => {
+            console.log('Botón cerrar flotante clickeado');
+            setMobileMenuOpen(false);
+          }}
+          className="absolute top-4 right-4 z-50 p-3 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors duration-200"
+          style={{ minWidth: '48px', minHeight: '48px' }}
+        >
+          <div className="w-6 h-6 flex flex-col justify-center items-center">
+            <span className="block w-5 h-0.5 rotate-45 translate-y-1 bg-gray-600"></span>
+            <span className="block w-5 h-0.5 -rotate-45 -translate-y-1 bg-gray-600"></span>
+          </div>
+        </button>
+        
+        <div className="flex flex-col h-full">
+          {/* Header del menú móvil con botón cerrar */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded border-2 flex items-center justify-center bg-white border-neutral-300">
+                <div className="text-lg font-serif font-bold text-neutral-700">
+                  {SITE.initials}
+                </div>
+              </div>
+              <span className="font-bold text-lg text-neutral-800">
+                {SITE.fullName}
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                console.log('Botón cerrar clickeado');
+                setMobileMenuOpen(false);
+              }}
+              className="p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200 bg-red-100"
+              style={{ minWidth: '44px', minHeight: '44px' }}
+            >
+              <div className="w-6 h-6 flex flex-col justify-center items-center">
+                <span className="block w-5 h-0.5 rotate-45 translate-y-1 bg-gray-600"></span>
+                <span className="block w-5 h-0.5 -rotate-45 -translate-y-1 bg-gray-600"></span>
+              </div>
+            </button>
+          </div>
+          
+          {/* Menú móvil */}
+          <div className="flex-1 px-6 py-8">
+            <ul className="space-y-6 text-gray-700 font-semibold text-xl">
+              <li onClick={() => scrollToSection('inicio')} className="hover:text-[var(--gold)] cursor-pointer transition-colors duration-200 py-2 border-b border-gray-100">Inicio</li>
+              <li onClick={() => scrollToSection('servicios')} className="hover:text-[var(--gold)] cursor-pointer transition-colors duration-200 py-2 border-b border-gray-100">Servicios</li>
+              <li onClick={() => scrollToSection('abogado')} className="hover:text-[var(--gold)] cursor-pointer transition-colors duration-200 py-2 border-b border-gray-100">Abogado</li>
+              <li onClick={() => scrollToSection('testimonios')} className="hover:text-[var(--gold)] cursor-pointer transition-colors duration-200 py-2 border-b border-gray-100">Noticias</li>
+              <li onClick={() => scrollToSection('contacto')} className="hover:text-[var(--gold)] cursor-pointer transition-colors duration-200 py-2 border-b border-gray-100">Contacto</li>
+            </ul>
+          </div>
+          
+          {/* Footer del menú móvil */}
+          <div className="p-6 border-t border-gray-200">
+            <a
+              href={whatsappCTA}
+              target="_blank"
+              rel="noreferrer"
+              className="w-full inline-flex items-center justify-center gap-2 bg-[var(--gold)] text-white px-4 py-3 rounded-lg font-medium hover:bg-[var(--gold)]/90 transition-colors duration-200"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Consulta WhatsApp
+            </a>
           </div>
         </div>
-      </header>
+      </div>
   
       {/* HERO */}
       <section id="inicio" className="relative min-h-screen flex items-center justify-center">
@@ -297,7 +468,8 @@ export default function Landing() {
               backgroundImage: "url('/fondo_hero.png')",
               backgroundSize: "cover",
               backgroundPosition: "center",
-              backgroundRepeat: "no-repeat"
+              backgroundRepeat: "no-repeat",
+              opacity: 0.8
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/80 to-black/60" />
@@ -315,29 +487,32 @@ export default function Landing() {
             </h1>
             
             {/* Subtitle */}
-            <p className="text-lg md:text-xl lg:text-2xl font-light max-w-3xl mx-auto leading-relaxed mb-4 text-white drop-shadow-md">
-              Nos apasiona brindar soluciones estratégicas y personalizadas a cada uno de 
-              nuestros clientes. Con experiencia y compromiso, trabajamos para ofrecer un 
-              servicio de calidad, basado en la confianza y la excelencia.
+            <p className="text-lg md:text-xl lg:text-2xl font-light max-w-3xl mx-auto leading-relaxed mb-4 drop-shadow-md" style={{ color: 'hsl(0deg 0% 90% / 80%)' }}>
+              Abogado especializado en Derecho Laboral, Civil y Comercial, y de Familia. 
+              Brindo asesoramiento jurídico profesional con un enfoque estratégico y personalizado, 
+              comprometido con la defensa de los derechos de mis clientes en Bahía Blanca.
             </p>
             
             {/* Call to action subtitle */}
-            <p className="text-lg md:text-xl font-light mb-12 text-white drop-shadow-md">
+            <p className="text-lg md:text-xl font-light mb-12 drop-shadow-md" style={{ color: 'hsl(0deg 0% 90% / 80%)' }}>
               ¡Estamos acá para ayudarte!
             </p>
             
             {/* CTA Button */}
-            <motion.a
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
+            <a
               href={whatsappCTA}
               target="_blank"
               rel="noreferrer"
-              className="inline-block bg-[var(--navy)] hover:bg-[var(--navy)]/90 text-white px-8 py-4 text-lg font-light tracking-wide transition-all duration-300 hover:shadow-lg"
+              className="inline-block px-8 py-4 text-lg font-semibold tracking-wide transition-all duration-300 hover:shadow-xl rounded-lg border-2 border-transparent hover:border-white/20 opacity-0 animate-fadeIn"
+              style={{ 
+                backgroundColor: 'hsl(225 30% 18%)',
+                color: 'white',
+                animationDelay: '1s', 
+                animationFillMode: 'forwards' 
+              }}
             >
               Contactate con nosotros
-            </motion.a>
+            </a>
           </motion.div>
         </div>
       </section>
@@ -382,16 +557,16 @@ export default function Landing() {
               </div>
   
               <p className="text-lg leading-relaxed text-neutral-600 font-light">
-                A través de mi canal de YouTube analizo los casos judiciales más relevantes de la actualidad, 
-                con un enfoque claro, accesible y riguroso. Mi propósito es acercar el derecho a todas las 
-                personas, explicando de forma sencilla cómo funciona y cómo incide en nuestra vida cotidiana.
+                Con más de una década de experiencia en el ejercicio profesional del derecho, 
+                me especializo en brindar soluciones jurídicas efectivas y estratégicas. Mi enfoque 
+                se centra en la comunicación clara, la transparencia y el compromiso con cada caso.
               </p>
               
               <p className="text-lg leading-relaxed text-neutral-600 font-light">
-                Me especializo en descomponer noticias jurídicas complejas, traducir conceptos legales al 
-                lenguaje común y ofrecer una perspectiva informada sobre los temas que generan debate en la 
-                sociedad. No solo busco informar, sino también fomentar la reflexión crítica y la conciencia 
-                sobre el papel fundamental que cumplen las leyes en nuestra realidad.
+                Trabajo con dedicación para proteger los derechos de mis clientes, ofreciendo 
+                asesoramiento personalizado y acompañamiento durante todo el proceso legal. 
+                Mi objetivo es lograr los mejores resultados posibles mediante estrategias 
+                jurídicas sólidas y una comunicación constante.
               </p>
   
               {/* Action Buttons */}
@@ -400,14 +575,36 @@ export default function Landing() {
                   href={whatsappCTA}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-2 border-2 border-neutral-800 text-neutral-800 px-6 py-3 hover:bg-neutral-800 hover:text-white transition-colors"
+                  className="flex items-center gap-2 border-2 border-neutral-300 text-neutral-600 px-6 py-3 transition-colors hover:text-white"
+                  style={{ 
+                    '--hover-bg': 'hsl(225 30% 18%)'
+                  } as React.CSSProperties}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'hsl(225 30% 18%)';
+                    e.currentTarget.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '';
+                    e.currentTarget.style.color = '';
+                  }}
                 >
                   <MessageCircle className="size-5" />
                   WhatsApp
                 </a>
                 <a
                   href={`mailto:${SITE.email}`}
-                  className="flex items-center gap-2 border-2 border-neutral-300 text-neutral-600 px-6 py-3 hover:border-neutral-800 hover:text-neutral-800 transition-colors"
+                  className="flex items-center gap-2 border-2 border-neutral-300 text-neutral-600 px-6 py-3 transition-colors hover:text-white"
+                  style={{ 
+                    '--hover-bg': 'hsl(225 30% 18%)'
+                  } as React.CSSProperties}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'hsl(225 30% 18%)';
+                    e.currentTarget.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '';
+                    e.currentTarget.style.color = '';
+                  }}
                 >
                   <Mail className="size-5" />
                   Email
@@ -416,10 +613,21 @@ export default function Landing() {
                   href={SITE.instagram}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-2 border-2 border-neutral-300 text-neutral-600 px-6 py-3 hover:border-neutral-800 hover:text-neutral-800 transition-colors"
+                  className="flex items-center gap-2 border-2 border-neutral-300 text-neutral-600 px-6 py-3 transition-colors hover:text-white"
+                  style={{ 
+                    '--hover-bg': 'hsl(225 30% 18%)'
+                  } as React.CSSProperties}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'hsl(225 30% 18%)';
+                    e.currentTarget.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '';
+                    e.currentTarget.style.color = '';
+                  }}
                 >
-                  <Play className="size-5" />
-                  YouTube
+                  <FaInstagram className="size-5" />
+                  Instagram
                 </a>
               </div>
             </motion.div>
@@ -433,6 +641,7 @@ export default function Landing() {
           <SectionHeading
             title="Áreas de Especialización Legal"
             subtitle="Soluciones claras y personalizadas para defender tus derechos."
+            cityText="Especialista en derecho laboral"
           />
           <div className="grid md:grid-cols-3 gap-6 md:gap-8">
             <ServiceCard
@@ -460,12 +669,13 @@ export default function Landing() {
           <SectionHeading
             title="Acerca del Estudio"
             subtitle="Compromiso, transparencia y comunicación constante."
+            cityText="Experiencia Profesional"
           />
-          <div className="grid md:grid-cols-12 gap-10 items-center">
-            <div className="md:col-span-6">
+          <div className="grid md:grid-cols-12 gap-10 items-start">
+            <div className="md:col-span-6 mt-4">
               <div className="prose prose-neutral max-w-none">
                 <p>
-                  Brindamos un asesoramiento cercano y honesto, con enfoque estratégico orientado a resultados. Nos tomamos el tiempo para explicar cada paso y que tomes decisiones informadas.
+                Brindamos un asesoramiento cercano y honesto, con un enfoque estratégico orientado a obtener resultados. Nos tomamos el tiempo necesario para explicarte cada paso y ayudarte a tomar decisiones informadas.
                 </p>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 not-prose mt-6">
                   {[
@@ -474,8 +684,8 @@ export default function Landing() {
                     "Comunicación clara en lenguaje simple",
                     "Honorarios transparentes y por etapas",
                   ].map((item) => (
-                    <li key={item} className="flex items-center gap-2">
-                      <span className="size-2 rounded-full bg-[var(--gold)]" />
+                    <li key={item} className="flex items-start gap-2">
+                      <span className="size-2 rounded-full bg-[var(--gold)] mt-2 flex-shrink-0" />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -486,7 +696,8 @@ export default function Landing() {
                   href={whatsappCTA}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[var(--green)] text-white px-4 py-2 font-medium shadow hover:opacity-95"
+                  className="inline-flex blanco items-center gap-2 rounded-xl text-white px-5 py-3 font-medium shadow hover:opacity-95"
+                  style={{ backgroundColor: 'rgb(32, 39, 60)' }}
                 >
                   <MessageCircle className="size-4" /> Solicitar consulta
                 </a>
@@ -504,7 +715,8 @@ export default function Landing() {
               <div className="rounded-3xl overflow-hidden border border-neutral-200 shadow-sm">
                 <iframe
                   title="Ubicación en Google Maps"
-                  src={mapsEmbed}
+                  //src={mapsEmbed}
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3112.744881465363!2d-62.265686587647615!3d-38.72366587164409!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95edbdc5feb7eb23%3A0xe777f9ceacc46f5f!2sEzequiel%20Cort%C3%A9s%20%7C%20Abogado%20Bahia%20Blanca%20%7C%20Laboral%2C%20Civil%20y%20de%20Familia!5e0!3m2!1ses!2sar!4v1757541404345!5m2!1ses!2sar"
                   width="100%"
                   height="350"
                   loading="lazy"
@@ -530,39 +742,87 @@ export default function Landing() {
           <SectionHeading
             title="Testimonios de clientes"
             subtitle="Experiencias reales de personas que confiaron su caso en nuestras manos."
+            cityText="Casos Exitosos"
           />
           <div className="grid md:grid-cols-3 gap-6 md:gap-8">
             {[
               {
-                name: "María R.",
+                name: "Claudia Penalver",
                 text:
-                  "Excelente trato y claridad para explicar cada paso. Logramos resolver el conflicto sin demoras.",
+                  "Quiero agradecer profundamente a mi abogado Ezequiel Cortés y a su equipo por su excelente trabajo en mi caso laboral. Desde el inicio mostró un compromiso genuino, humano y profesional, incluso cuando todo parecía complicado y era difícil ubicar a mi ex empleador. Gracias a su constancia, logró no solo avanzar el proceso, sino también llegar a un acuerdo justo. Me sentí acompañada y respaldada en todo momento. Recomiendo 100% su gestión y su labor, no solo por su eficacia, sino por la buena fe con la que trabaja. ¡Gracias de corazón!",
+                rating: 5,
+                image: "https://lh3.googleusercontent.com/a-/ALV-UjXbe4loVjLQ6-2JRdVcqTrLqX55yWxb8LF4ot7DDTAp7ONzPuM=w72-h72-p-rp-mo-br100",
               },
               {
-                name: "Julián P.",
+                name: "Maria Ramos",
                 text:
-                  "Muy buena comunicación y compromiso. Sentí acompañamiento durante todo el proceso.",
+                  "Excelente atención, cordialidad y acompañamiento absoluto por parte del Dr. Cortés. Agradezco profundamente su acompañamiento. Muy recomendable.",
+                rating: 5,
               },
               {
-                name: "Fernando G.",
+                name: "Silvana Roldan",
                 text:
-                  "Profesional serio y estratégico. El resultado superó mis expectativas.",
+                  "Exelente profesional, responde rápido, asiste personalmente al cliente, súper recomendable.",
+                rating: 5,
+                image: "https://lh3.googleusercontent.com/a-/ALV-UjXhkIGRisMqIo2Akr-PO1AfDJZzaO5ARAcU0S39V8eGJtLgIg0FDQ=w72-h72-p-rp-mo-br100",
               },
             ].map((t) => (
-              <motion.blockquote
+              <motion.div
                 key={t.name}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.5 }}
-                className="rounded-2xl bg-white p-6 border border-neutral-200 shadow-sm"
+                className="group relative"
               >
-                <p className="text-neutral-700 leading-relaxed">{t.text}</p>
-                <footer className="mt-4 text-sm font-medium text-neutral-900">{t.name}</footer>
-              </motion.blockquote>
+                <div className="relative rounded-2xl bg-white p-6 border border-neutral-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                  {/* Quote icon */}
+                  <div className="absolute top-4 right-4 opacity-10">
+                    <svg className="w-8 h-8 text-[var(--gold)]" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h4v10h-10z"/>
+                    </svg>
+                  </div>
+                  
+                  {/* Rating stars */}
+                  <div className="flex gap-1 mb-4">
+                    {[...Array(t.rating)].map((_, i) => (
+                      <svg key={i} className="w-4 h-4 text-[var(--gold)]" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                      </svg>
+                    ))}
+                  </div>
+                  
+                  {/* Testimonial text */}
+                  <blockquote className="text-neutral-700 leading-relaxed mb-6 relative z-10">
+                    "{t.text}"
+                  </blockquote>
+                  
+                  {/* Author info */}
+                  <footer className="flex items-center gap-3">
+                    {t.image ? (
+                      <img 
+                        src={t.image} 
+                        alt={t.name}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-[var(--gold)]"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--gold)] to-yellow-600 flex items-center justify-center text-white font-semibold text-sm">
+                        {t.name.charAt(0)}
+                      </div>
+                    )}
+                    <div>
+                      <div className="font-semibold text-neutral-900">{t.name}</div>
+                      <div className="text-sm text-neutral-500">Cliente satisfecho</div>
+                    </div>
+                  </footer>
+                  
+                  {/* Decorative element */}
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--gold)] to-transparent rounded-b-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+              </motion.div>
             ))}
           </div>
-          <p className="text-xs text-neutral-500 mt-6 text-center">
+          <p className="text-xs text-neutral-500 mt-8 text-center max-w-2xl mx-auto">
             Las opiniones son ilustrativas. El resultado de un caso depende de sus circunstancias particulares.
           </p>
         </div>
@@ -571,7 +831,9 @@ export default function Landing() {
       {/* FAQ */}
       <section id="faq" className="py-16 md:py-24 bg-white">
         <div className="max-w-5xl mx-auto px-4 md:px-8">
-          <SectionHeading title="Preguntas frecuentes" />
+          <div className="max-w-3xl mx-auto text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-semibold text-neutral-900 mb-3">Preguntas frecuentes</h2>
+          </div>
           <div className="grid gap-4">
             <FAQItem
               q="¿Cómo coordino una consulta?"
@@ -599,6 +861,7 @@ export default function Landing() {
           <SectionHeading
             title="Contacto"
             subtitle="Contanos brevemente tu consulta y te respondemos a la brevedad."
+            cityText="Bahía Blanca"
           />
           <div className="grid md:grid-cols-12 gap-8">
             <div className="md:col-span-5">
@@ -665,14 +928,16 @@ export default function Landing() {
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    className="mt-1 w-full min-h-[120px] rounded-xl border border-neutral-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--gold)]"
+                    className="mt-1 w-full min-h-[120px] max-h-[300px] rounded-xl border border-neutral-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--gold)] resize-y"
                     placeholder="Contanos brevemente tu consulta"
+                    maxLength={500}
                   />
                 </div>
                 <div className="mt-5 flex flex-wrap items-center gap-3">
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 rounded-xl bg-[var(--green)] text-white px-5 py-2.5 font-medium shadow hover:opacity-95"
+                    className="inline-flex items-center gap-2 rounded-xl text-white px-5 py-2.5 font-medium shadow hover:opacity-95"
+                    style={{ backgroundColor: 'rgb(32, 39, 60)' }}
                   >
                     <MessageCircle className="size-4" /> Enviar por WhatsApp
                   </button>
@@ -690,22 +955,209 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
-      {/* FOOTER */}
-      <footer className="border-t border-neutral-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="size-8 rounded-xl bg-[var(--green)] text-white grid place-items-center font-semibold">
+{/* FOOTER MEJORADO */}
+<footer className="relative overflow-hidden">
+  {/* Gradient Background */}
+  <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[var(--navy)] to-slate-800"></div>
+  
+  {/* Subtle Pattern Overlay */}
+  <div className="absolute inset-0 opacity-5">
+    <div className="absolute inset-0" style={{
+      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Ccircle cx='7' cy='7' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+    }}></div>
+  </div>
+  
+  <div className="relative max-w-7xl mx-auto px-4 md:px-8">
+    {/* Main Content */}
+    <div className="py-16 grid lg:grid-cols-12 gap-12">
+      
+      {/* Logo and Brand Section */}
+      <div className="lg:col-span-5">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex flex-col items-center">
+            <div className="size-12 rounded border-2 flex items-center justify-center bg-white border-neutral-300">
+              <div className="text-2xl font-serif font-bold text-neutral-700">
                 {SITE.initials}
               </div>
-              <div className="text-sm">
-                <div className="font-medium">{SITE.fullName}</div>
-                <div className="text-neutral-500">{SITE.profession} · {SITE.city}</div>
+            </div>
+          </div>
+          <div className="leading-tight">
+            <div className="font-light text-lg text-white drop-shadow-lg">
+              {SITE.fullName}
+            </div>
+          </div>
+        </div>
+        
+        <p className="text-slate-300 leading-relaxed text-lg mb-8 max-w-lg">
+          Más de <span className="text-[var(--gold)] font-semibold">15 años</span> de experiencia 
+          brindando asesoramiento jurídico especializado con <span className="text-white font-medium">resultados comprobados </span> 
+          y atención personalizada.
+        </p>
+        
+        {/* Trust Indicators */}
+     {/*    <div className="grid grid-cols-2 gap-6 mb-8">
+          <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
+            <div className="text-2xl font-bold text-[var(--gold)] mb-1">500+</div>
+            <div className="text-sm text-slate-300">Casos Exitosos</div>
+          </div>
+          <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
+            <div className="text-2xl font-bold text-[var(--gold)] mb-1">24/7</div>
+            <div className="text-sm text-slate-300">Disponibilidad</div>
+          </div>
+        </div> */}
+        
+        {/* Social Links */}
+        <div className="flex gap-3">
+          <a
+            href={SITE.instagram}
+            target="_blank"
+            rel="noreferrer"
+            className="group flex items-center justify-center bg-white/10 hover:bg-white/20 w-12 h-12 rounded-xl transition-all duration-300 border border-white/10 hover:border-[var(--gold)]/30"
+            title="Instagram"
+          >
+            <FaInstagram className="text-white group-hover:scale-110 transition-transform" size={20} />
+          </a>
+          <a
+            href={whatsappCTA}
+            target="_blank"
+            rel="noreferrer"
+            className="group flex items-center justify-center bg-white/10 hover:bg-white/20 w-12 h-12 rounded-xl transition-all duration-300 border border-white/10 hover:border-[var(--gold)]/30"
+            title="WhatsApp"
+          >
+            <FaWhatsapp className="text-white group-hover:scale-110 transition-transform" size={20} />
+          </a>
+        </div>
+      </div>
+
+      {/* Services and Contact Grid */}
+      <div className="lg:col-span-7 grid md:grid-cols-2 gap-12">
+        
+        {/* Services */}
+        <div>
+          <h3 className="font-bold text-xl text-white mb-6 relative">
+            Áreas de Especialización
+            <div className="absolute bottom-0 left-0 w-12 h-0.5 bg-[var(--gold)] mt-2"></div>
+          </h3>
+          <ul className="space-y-4">
+            <li>
+              <a href="#servicios" className="group flex items-center gap-3 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/5" style={{ color: 'oklch(86.9% 0.022 252.894)' }}>
+                <div className="size-2 bg-[var(--gold)] rounded-full group-hover:scale-125 transition-transform"></div>
+                <span className="font-medium">Derecho Laboral</span>
+              </a>
+            </li>
+            <li>
+              <a href="#servicios" className="group flex items-center gap-3 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/5" style={{ color: 'oklch(86.9% 0.022 252.894)' }}>
+                <div className="size-2 bg-[var(--gold)] rounded-full group-hover:scale-125 transition-transform"></div>
+                <span className="font-medium">Civil y Comercial</span>
+              </a>
+            </li>
+            <li>
+              <a href="#servicios" className="group flex items-center gap-3 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/5" style={{ color: 'oklch(86.9% 0.022 252.894)' }}>
+                <div className="size-2 bg-[var(--gold)] rounded-full group-hover:scale-125 transition-transform"></div>
+                <span className="font-medium">Derecho de Familia</span>
+              </a>
+            </li>
+            <li>
+              <a href="#contacto" className="group flex items-center gap-3 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/5" style={{ color: 'oklch(86.9% 0.022 252.894)' }}>
+                <div className="size-2 bg-[var(--gold)] rounded-full group-hover:scale-125 transition-transform"></div>
+                <span className="font-medium">Asesorías Urgentes</span>
+              </a>
+            </li>
+          </ul>
+          
+          {/* Quick CTA */}
+       {/*    <div className="mt-8 p-4 bg-gradient-to-r from-[var(--gold)]/10 to-yellow-600/10 rounded-xl border border-[var(--gold)]/20">
+            <p className="text-sm text-slate-300 mb-3">¿Necesitas asesoramiento urgente?</p>
+            <a href="#contacto" className="inline-flex items-center gap-2 text-[var(--gold)] hover:text-yellow-400 font-semibold text-sm transition-colors">
+              Consulta Gratuita
+              <ArrowRight className="size-4" />
+            </a>
+          </div> */}
+        </div>
+
+        {/* Contact Information */}
+        <div>
+          <h3 className="font-bold text-xl text-white mb-6 relative">
+            Información de Contacto
+            <div className="absolute bottom-0 left-0 w-12 h-0.5 bg-[var(--gold)] mt-2"></div>
+          </h3>
+          <div className="space-y-5">
+            <div className="group flex items-start gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors">
+              <div className="p-2 bg-[var(--gold)]/20 rounded-lg">
+                <MapPin className="size-5 text-[var(--gold)]" />
+              </div>
+              <div>
+                <p className="font-medium text-white mb-1">Oficina Principal</p>
+                <p className="text-slate-300 text-sm leading-relaxed">{SITE.address}</p>
               </div>
             </div>
-            <div className="text-xs text-neutral-500">
-              © {new Date().getFullYear()} {SITE.fullName}. Todo derecho reservado.
+            
+            {SITE.email && (
+              <div className="group flex items-start gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                <div className="p-2 bg-[var(--gold)]/20 rounded-lg">
+                  <Mail className="size-5 text-[var(--gold)]" />
+                </div>
+                <div>
+                  <p className="font-medium text-white mb-1">Email</p>
+                  <a href={`mailto:${SITE.email}`} className="text-slate-300 hover:text-[var(--gold)] transition-colors text-sm">
+                    {SITE.email}
+                  </a>
+                </div>
+              </div>
+            )}
+            
+            {SITE.phone && (
+              <div className="group flex items-start gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                <div className="p-2 bg-[var(--gold)]/20 rounded-lg">
+                  <Phone className="size-5 text-[var(--gold)]" />
+                </div>
+                <div>
+                  <p className="font-medium text-white mb-1">Teléfono</p>
+                  <a href={`tel:${SITE.phone}`} className="text-slate-300 hover:text-[var(--gold)] transition-colors text-sm">
+                    {SITE.phone}
+                  </a>
+                </div>
+              </div>
+            )}
+            
+            {/* Office Hours */}
+            <div className="group flex items-start gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors">
+              <div className="p-2 bg-[var(--gold)]/20 rounded-lg">
+                <Clock className="size-5 text-[var(--gold)]" />
+              </div>
+              <div>
+                <p className="font-medium text-white mb-1">Horarios</p>
+                <p className="text-slate-300 text-sm">Lun - Vie: 9:00 - 18:00</p>
+                <p className="text-slate-300 text-sm">Sáb: 9:00 - 13:00</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Bottom Section */}
+    <div className="border-t border-white/10 py-8">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm">
+           <div className="text-slate-400 text-center w-full">
+             © {new Date().getFullYear()} {SITE.fullName}. Todos los derechos reservados.
+           </div>
+        {/*   <div className="flex items-center gap-4 text-slate-500">
+            <span>•</span>
+            <span>Matrícula Profesional N° 12345</span>
+            <span>•</span>
+            <span>Colegio de Abogados</span>
+          </div> */}
+        </div>
+        
+        {/* Navigation Links */}
+       {/*  <nav className="flex flex-wrap justify-center gap-8 text-sm">
+          <a href="#inicio" className="text-slate-400 hover:text-[var(--gold)] transition-colors font-medium">Inicio</a>
+          <a href="#servicios" className="text-slate-400 hover:text-[var(--gold)] transition-colors font-medium">Servicios</a>
+          <a href="#abogado" className="text-slate-400 hover:text-[var(--gold)] transition-colors font-medium">Perfil</a>
+          <a href="#contacto" className="text-slate-400 hover:text-[var(--gold)] transition-colors font-medium">Contacto</a>
+        </nav> */}
             </div>
           </div>
         </div>
