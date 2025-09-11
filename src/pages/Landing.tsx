@@ -283,19 +283,13 @@ export default function Landing() {
       {/* HEADER ORIGINAL */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-black/20 backdrop-blur-sm'
+          scrolled
+            ? "bg-white/95 backdrop-blur-md shadow-lg"
+            : "bg-black/20 backdrop-blur-sm"
         }`}
-        style={{
-          top: 'env(safe-area-inset-top, 0px)',
-          minHeight: '80px',
-          WebkitTransform: 'translateZ(0)',
-          transform: 'translateZ(0)',
-          width: '100vw',
-          maxWidth: '100vw',
-          boxSizing: 'border-box'
-        }}
       >
-        <nav className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between py-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="flex items-center justify-between py-4">
           {/* Logo */}
           <a href="#inicio" className="flex items-center gap-3">
             <div className="flex flex-col items-center">
@@ -366,24 +360,8 @@ export default function Landing() {
               Contacto
             </a>
           </nav>
-
-          {/* Botón hamburguesa móvil */}
-          <button 
-            onClick={() => {
-              console.log('Botón hamburguesa clickeado, estado actual:', mobileMenuOpen);
-              setMobileMenuOpen(!mobileMenuOpen);
-              console.log('Nuevo estado:', !mobileMenuOpen);
-            }}
-            className="lg:hidden p-3 rounded-lg hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:ring-opacity-50 bg-blue-100"
-            style={{ minWidth: '48px', minHeight: '48px' }}
-          >
-            <div className="w-6 h-6 flex flex-col justify-center items-center space-y-1">
-              <span className={`block w-5 h-0.5 bg-gray-700 transition-all duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
-              <span className={`block w-5 h-0.5 bg-gray-700 transition-all duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`}></span>
-              <span className={`block w-5 h-0.5 bg-gray-700 transition-all duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
-            </div>
-          </button>
-        </nav>
+          </div>
+        </div>
       </header>
       
       {/* Menú móvil */}
