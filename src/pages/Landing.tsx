@@ -5,7 +5,6 @@ import {
   Scale,
   Users,
   Clock,
-  Play,
   MapPin,
   Mail,
   Phone,
@@ -49,7 +48,7 @@ const COLORS = {
   navy: "#0C1320",
 };
 
-function useScrolled(threshold = 50) {
+function useScrolled(threshold = 150) {
   const [scrolled, setScrolled] = useState(false);
   
   useEffect(() => {
@@ -155,11 +154,23 @@ export default function Landing() {
 
   // Función para hacer scroll suave a las secciones
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-    setMobileMenuOpen(false); // Cerrar menú móvil al hacer click
+    console.log('scrollToSection llamado con:', sectionId);
+    setMobileMenuOpen(false); // Cerrar menú móvil primero
+    
+    // Pequeño delay para asegurar que el menú se cierre antes del scroll
+    setTimeout(() => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        console.log('Elemento encontrado:', element);
+        const elementPosition = element.offsetTop - 100; // Offset de 100px hacia arriba
+        window.scrollTo({
+          top: elementPosition,
+          behavior: 'smooth'
+        });
+      } else {
+        console.log('Elemento no encontrado para:', sectionId);
+      }
+    }, 100);
   };
 
   // Cerrar menú móvil al hacer clic fuera y controlar scroll
@@ -171,16 +182,38 @@ export default function Landing() {
       }
     };
 
-    // Controlar scroll del body
+    // Controlar scroll del body de manera más robusta
     if (mobileMenuOpen) {
+      // Guardar la posición actual del scroll
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
       document.body.classList.add('menu-open');
     } else {
+      // Restaurar el scroll
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
       document.body.classList.remove('menu-open');
+      
+      // Restaurar la posición del scroll
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
     }
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      // Limpiar estilos al desmontar
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
       document.body.classList.remove('menu-open');
     };
   }, [mobileMenuOpen]);
@@ -214,7 +247,7 @@ export default function Landing() {
   }, []);
 
   const mapsEmbed = useMemo(
-    () => `https://maps.google.com/maps?q=${SITE.lat},${SITE.lng}&z=15&output=embed`,
+    () => `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3112.744881465363!2d-62.265686587647615!3d-38.72366587164409!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95edbdc5feb7eb23%3A0xe777f9ceacc46f5f!2sEzequiel%20Cort%C3%A9s%20%7C%20Abogado%20Bahia%20Blanca%20%7C%20Laboral%2C%20Civil%20y%20de%20Familia!5e0!3m2!1ses!2sar!4v1757541404345!5m2!1ses!2sar`,
     []
   );
 
@@ -266,28 +299,19 @@ export default function Landing() {
       }}
       className="min-h-dvh bg-neutral-50 text-neutral-900"
     >
-      {/* CONTACT BAR - Barra superior como en Estudio Riccio */}
-  {/*     <div className="bg-neutral-800 text-neutral-300 text-sm py-2">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 flex justify-end items-center gap-6">
-          <a href={`mailto:${SITE.email}`} className="flex items-center gap-2 hover:text-white">
-            <Mail className="size-4" />
-            {SITE.email}
-          </a>
-          <a href={`tel:${SITE.phone}`} className="flex items-center gap-2 hover:text-white">
-            <Phone className="size-4" />
-            {SITE.phone}
-          </a>
-        </div>
-      </div> */}
-  
-      {/* HEADER ORIGINAL */}
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "bg-white/95 backdrop-blur-md shadow-lg"
-            : "bg-black/20 backdrop-blur-sm"
-        }`}
-      >
+      {/* HEADER */}
+       <header
+         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+           scrolled
+             ? "bg-white/95 backdrop-blur-md shadow-lg"
+             : "backdrop-blur-sm"
+         } ${mobileMenuOpen ? 'hidden' : ''}`}
+         style={{
+           background: scrolled 
+             ? undefined 
+             : 'linear-gradient(to bottom, rgba(75, 85, 99, 0.3), rgba(0, 0, 0, 0.4))'
+         }}
+       >
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex items-center justify-between py-4">
           {/* Logo */}
@@ -359,81 +383,101 @@ export default function Landing() {
             >
               Contacto
             </a>
-          </nav>
-          </div>
-        </div>
-      </header>
-      
-      {/* Menú móvil */}
-      <div className={`mobile-menu fixed top-0 left-0 w-full h-full z-40 transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:hidden`} style={{ backgroundColor: '#f8f9fa' }}>
-        {/* Botón cerrar flotante */}
-        <button
-          onClick={() => {
-            console.log('Botón cerrar flotante clickeado');
-            setMobileMenuOpen(false);
-          }}
-          className="absolute top-4 right-4 z-50 p-3 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors duration-200"
-          style={{ minWidth: '48px', minHeight: '48px' }}
-        >
-          <div className="w-6 h-6 flex flex-col justify-center items-center">
-            <span className="block w-5 h-0.5 rotate-45 translate-y-1 bg-gray-600"></span>
-            <span className="block w-5 h-0.5 -rotate-45 -translate-y-1 bg-gray-600"></span>
-          </div>
-        </button>
-        
-        <div className="flex flex-col h-full">
-          {/* Header del menú móvil con botón cerrar */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="size-10 rounded border-2 flex items-center justify-center bg-white border-neutral-300">
-                <div className="text-lg font-serif font-bold text-neutral-700">
-                  {SITE.initials}
-                </div>
-              </div>
-              <span className="font-bold text-lg text-neutral-800">
-                {SITE.fullName}
-              </span>
-            </div>
-            <button
-              onClick={() => {
-                console.log('Botón cerrar clickeado');
-                setMobileMenuOpen(false);
-              }}
-              className="p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200 bg-red-100"
-              style={{ minWidth: '44px', minHeight: '44px' }}
-            >
-              <div className="w-6 h-6 flex flex-col justify-center items-center">
-                <span className="block w-5 h-0.5 rotate-45 translate-y-1 bg-gray-600"></span>
-                <span className="block w-5 h-0.5 -rotate-45 -translate-y-1 bg-gray-600"></span>
-              </div>
-            </button>
-          </div>
-          
-          {/* Menú móvil */}
-          <div className="flex-1 px-6 py-8">
-            <ul className="space-y-6 text-gray-700 font-semibold text-xl">
-              <li onClick={() => scrollToSection('inicio')} className="hover:text-[var(--gold)] cursor-pointer transition-colors duration-200 py-2 border-b border-gray-100">Inicio</li>
-              <li onClick={() => scrollToSection('servicios')} className="hover:text-[var(--gold)] cursor-pointer transition-colors duration-200 py-2 border-b border-gray-100">Servicios</li>
-              <li onClick={() => scrollToSection('abogado')} className="hover:text-[var(--gold)] cursor-pointer transition-colors duration-200 py-2 border-b border-gray-100">Abogado</li>
-              <li onClick={() => scrollToSection('testimonios')} className="hover:text-[var(--gold)] cursor-pointer transition-colors duration-200 py-2 border-b border-gray-100">Noticias</li>
-              <li onClick={() => scrollToSection('contacto')} className="hover:text-[var(--gold)] cursor-pointer transition-colors duration-200 py-2 border-b border-gray-100">Contacto</li>
-            </ul>
-          </div>
-          
-          {/* Footer del menú móvil */}
-          <div className="p-6 border-t border-gray-200">
-            <a
-              href={whatsappCTA}
-              target="_blank"
-              rel="noreferrer"
-              className="w-full inline-flex items-center justify-center gap-2 bg-[var(--gold)] text-white px-4 py-3 rounded-lg font-medium hover:bg-[var(--gold)]/90 transition-colors duration-200"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Consulta WhatsApp
-            </a>
-          </div>
-        </div>
-      </div>
+           </nav>
+           
+           {/* Hamburger button for mobile */}
+           <button
+             onClick={() => {
+               console.log('Hamburger button clicked');
+               setMobileMenuOpen(true);
+             }}
+             className={`hamburger-button md:hidden p-2 transition-colors bg-transparent border-none outline-none ${
+               scrolled 
+                 ? 'text-neutral-800 hover:text-[var(--gold)]' 
+                 : 'text-white hover:text-[var(--gold)]'
+             }`}
+             style={{ 
+               backgroundColor: 'transparent !important',
+               border: 'none !important',
+               outline: 'none !important',
+               boxShadow: 'none !important'
+             }}
+           >
+             <div className="w-6 h-6 flex flex-col justify-center items-center">
+               <span className="block w-5 h-0.5 bg-current mb-1"></span>
+               <span className="block w-5 h-0.5 bg-current mb-1"></span>
+               <span className="block w-5 h-0.5 bg-current"></span>
+             </div>
+           </button>
+           </div>
+         </div>
+       </header>
+       
+       {/* Menú móvil */}
+       <div className={`mobile-menu fixed top-0 left-0 w-full h-full z-40 transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:hidden`} style={{ backgroundColor: '#f8f9fa' }}>
+         <div className="flex flex-col h-full">
+           {/* Header del menú móvil con botón cerrar */}
+           <div className="flex items-center justify-between p-6 bg-white border-b border-gray-100 shadow-sm">
+             <div className="flex items-center gap-3">
+               <div className="size-10 rounded border-2 flex items-center justify-center bg-gradient-to-br from-[var(--gold)] to-yellow-600 border-[var(--gold)]">
+                 <div className="text-lg font-serif font-bold text-white">
+                   {SITE.initials}
+                 </div>
+               </div>
+               <span className="font-semibold text-lg text-neutral-800">
+                 {SITE.fullName}
+               </span>
+             </div>
+             <button
+               onClick={() => {
+                 console.log('Botón cerrar clickeado');
+                 setMobileMenuOpen(false);
+               }}
+               className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+               style={{ minWidth: '40px', minHeight: '40px' }}
+             >
+               <div className="w-5 h-5 flex flex-col justify-center items-center">
+                 <span className="block w-4 h-0.5 rotate-45 translate-y-0.5 bg-gray-600"></span>
+                 <span className="block w-4 h-0.5 -rotate-45 -translate-y-0.5 bg-gray-600"></span>
+               </div>
+             </button>
+           </div>
+           
+           {/* Menú móvil */}
+           <div className="flex-1 px-6 py-8 bg-gradient-to-b from-white to-gray-50">
+             <ul className="space-y-3">
+               <li onClick={() => scrollToSection('inicio')} className="group cursor-pointer transition-all duration-200 py-4 px-4 rounded-xl hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200">
+                 <span className="text-gray-700 font-semibold text-lg group-hover:text-[var(--gold)] transition-colors">Inicio</span>
+               </li>
+               <li onClick={() => scrollToSection('servicios')} className="group cursor-pointer transition-all duration-200 py-4 px-4 rounded-xl hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200">
+                 <span className="text-gray-700 font-semibold text-lg group-hover:text-[var(--gold)] transition-colors">Servicios</span>
+               </li>
+               <li onClick={() => scrollToSection('abogado')} className="group cursor-pointer transition-all duration-200 py-4 px-4 rounded-xl hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200">
+                 <span className="text-gray-700 font-semibold text-lg group-hover:text-[var(--gold)] transition-colors">Abogado</span>
+               </li>
+               <li onClick={() => scrollToSection('testimonios')} className="group cursor-pointer transition-all duration-200 py-4 px-4 rounded-xl hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200">
+                 <span className="text-gray-700 font-semibold text-lg group-hover:text-[var(--gold)] transition-colors">Testimonios</span>
+               </li>
+               <li onClick={() => scrollToSection('contacto')} className="group cursor-pointer transition-all duration-200 py-4 px-4 rounded-xl hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200">
+                 <span className="text-gray-700 font-semibold text-lg group-hover:text-[var(--gold)] transition-colors">Contacto</span>
+               </li>
+             </ul>
+           </div>
+           
+           {/* Footer del menú móvil */}
+           <div className="p-6 bg-white border-t border-gray-100 shadow-lg">
+             <a
+               href={whatsappCTA}
+               target="_blank"
+               rel="noreferrer"
+               className="w-full inline-flex items-center justify-center gap-2 bg-[var(--gold)] text-white px-4 py-3 rounded-lg font-medium hover:bg-[var(--gold)]/90 transition-colors duration-200"
+             >
+               <MessageCircle className="w-4 h-4" />
+               Consulta WhatsApp
+             </a>
+           </div>
+         </div>
+       </div>
   
       {/* HERO */}
       <section id="inicio" className="relative min-h-screen flex items-center justify-center">
@@ -465,9 +509,7 @@ export default function Landing() {
             
             {/* Subtitle */}
             <p className="text-lg md:text-xl lg:text-2xl font-light max-w-3xl mx-auto leading-relaxed mb-4 drop-shadow-md" style={{ color: 'hsl(0deg 0% 90% / 80%)' }}>
-              Abogado especializado en Derecho Laboral, Civil y Comercial, y de Familia. 
-              Brindo asesoramiento jurídico profesional con un enfoque estratégico y personalizado, 
-              comprometido con la defensa de los derechos de mis clientes en Bahía Blanca.
+            Abogado especializado en Derecho Laboral, Civil, Comercial y de Familia. Ofrezco un asesoramiento jurídico integral, estratégico y personalizado, con el firme compromiso de proteger y defender los derechos de mis clientes en Bahía Blanca.
             </p>
             
             {/* Call to action subtitle */}
@@ -507,7 +549,7 @@ export default function Landing() {
             >
               <div className="relative">
                 <img
-                  src="/imagen_perfil.png"
+                  src="https://res.cloudinary.com/dzoupwn0e/image/upload/v1757602564/imagen_perfil_vrjumh.webp"
                   alt="Ezequiel Cortés - Abogado"
                   className="w-full h-auto rounded-lg shadow-lg object-contain"
                 />
@@ -693,7 +735,7 @@ export default function Landing() {
                 <iframe
                   title="Ubicación en Google Maps"
                   //src={mapsEmbed}
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3112.744881465363!2d-62.265686587647615!3d-38.72366587164409!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95edbdc5feb7eb23%3A0xe777f9ceacc46f5f!2sEzequiel%20Cort%C3%A9s%20%7C%20Abogado%20Bahia%20Blanca%20%7C%20Laboral%2C%20Civil%20y%20de%20Familia!5e0!3m2!1ses!2sar!4v1757541404345!5m2!1ses!2sar"
+                  src={mapsEmbed}
                   width="100%"
                   height="350"
                   loading="lazy"
@@ -728,7 +770,7 @@ export default function Landing() {
                 text:
                   "Quiero agradecer profundamente a mi abogado Ezequiel Cortés y a su equipo por su excelente trabajo en mi caso laboral. Desde el inicio mostró un compromiso genuino, humano y profesional, incluso cuando todo parecía complicado y era difícil ubicar a mi ex empleador. Gracias a su constancia, logró no solo avanzar el proceso, sino también llegar a un acuerdo justo. Me sentí acompañada y respaldada en todo momento. Recomiendo 100% su gestión y su labor, no solo por su eficacia, sino por la buena fe con la que trabaja. ¡Gracias de corazón!",
                 rating: 5,
-                image: "https://lh3.googleusercontent.com/a-/ALV-UjXbe4loVjLQ6-2JRdVcqTrLqX55yWxb8LF4ot7DDTAp7ONzPuM=w72-h72-p-rp-mo-br100",
+                image: "https://res.cloudinary.com/dzoupwn0e/image/upload/v1757602563/unnamed_18_fe5rku.webp",
               },
               {
                 name: "Maria Ramos",
@@ -741,7 +783,7 @@ export default function Landing() {
                 text:
                   "Exelente profesional, responde rápido, asiste personalmente al cliente, súper recomendable.",
                 rating: 5,
-                image: "https://lh3.googleusercontent.com/a-/ALV-UjXhkIGRisMqIo2Akr-PO1AfDJZzaO5ARAcU0S39V8eGJtLgIg0FDQ=w72-h72-p-rp-mo-br100",
+                image: "https://res.cloudinary.com/dzoupwn0e/image/upload/v1757602563/unnamed_19_vqeclv.webp",
               },
             ].map((t) => (
               <motion.div

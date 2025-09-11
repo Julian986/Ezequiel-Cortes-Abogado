@@ -98,9 +98,30 @@ body.menu-open {
   overflow: hidden;
 }
 
-/* Arreglar viewport móvil - prevenir scroll horizontal y vertical no deseado */
-* {
-  box-sizing: border-box;
+/* Fix mobile button backgrounds */
+.hamburger-button {
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+.hamburger-button:focus {
+  background-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.hamburger-button:active {
+  background-color: transparent !important;
+}
+
+/* Scroll suave para toda la página */
+html {
+  scroll-behavior: smooth;
 }
 
 
