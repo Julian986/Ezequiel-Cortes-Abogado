@@ -31,8 +31,8 @@ const SITE = {
   city: "Bahía Blanca",
   specialties: ["Laboral", "Civil y Comercial", "Familia"],
   // Reemplazar con datos reales cuando estén disponibles
-  phone: "", // Ej: +54 9 291 123-4567
-  whatsapp: "", // Ej: https://wa.me/5492911234567
+  phone: "+54 9 291 429-2134", // Ej: +54 9 291 123-4567
+  whatsapp: "https://wa.me/5492914292134", // Ej: https://wa.me/5492911234567
   email: "", // Ej: consultas@estudioezequiel.com
   address: "Bahía Blanca, Buenos Aires",
   instagram: "https://www.instagram.com/ezequiel.cortes.abogado/",
