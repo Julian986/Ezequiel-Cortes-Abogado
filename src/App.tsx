@@ -1,4 +1,5 @@
 import './App.css'
+import { Analytics } from '@vercel/analytics/react'
 import Landing from './pages/Landing'
 
 function App() {
@@ -6,6 +7,7 @@ function App() {
   return (
     <>
         <Landing />
+        <Analytics />
     </>
   )
 }

@@ -1158,9 +1158,21 @@ export default function Landing() {
     {/* Bottom Section */}
     <div className="border-t border-white/10 py-8">
       <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm">
+         <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-sm">
            <div className="text-slate-400 text-center w-full">
              © {new Date().getFullYear()} {SITE.fullName}. Todos los derechos reservados.
+           </div>
+           <div className="text-slate-500 text-center w-full">
+             Creado por{" "}
+             <a
+               href="https://glomun.com"
+               target="_blank"
+               rel="noopener noreferrer"
+               className="hover:opacity-80"
+               style={{ color: 'rgb(100 116 139)', textDecoration: 'underline' }}
+             >
+               glomun.com
+             </a>
            </div>
         {/*   <div className="flex items-center gap-4 text-slate-500">
             <span>•</span>
